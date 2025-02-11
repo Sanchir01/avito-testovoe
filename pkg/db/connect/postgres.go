@@ -12,7 +12,7 @@ func PGXNew(ctx context.Context, user, host, db, port string, maxAttempts int) (
 
 	dsn := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s",
-		user, os.Getenv("PASSWORD_POSTGRES"),
+		user, os.Getenv("POSTGRES_PASSWORD"),
 		host, port, db,
 	)
 
