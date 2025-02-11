@@ -11,7 +11,7 @@ type Database struct {
 	PrimaryDB *pgxpool.Pool
 }
 
-func NewDataBases(ctx context.Context, user, host, db string, port, maxAttempts int) (*Database, error) {
+func NewDataBases(ctx context.Context, user, host, db, port string, maxAttempts int) (*Database, error) {
 	pgxdb, err := connect.PGXNew(ctx, user, host, db, port, maxAttempts)
 	if err != nil {
 		return nil, err

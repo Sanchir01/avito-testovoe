@@ -13,6 +13,7 @@ import (
 var (
 	development = "development"
 	production  = "production"
+	local       = "local"
 )
 
 type PrettyHandlerOptions struct {
@@ -104,9 +105,11 @@ func setupLogger(env string) *slog.Logger {
 	var lg *slog.Logger
 	switch env {
 	case production:
-		lg = setupPrettySlog()
+		lg = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	case development:
 		lg = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	case local:
+		lg = setupPrettySlog()
 	}
 	return lg
 }

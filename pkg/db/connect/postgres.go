@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func PGXNew(ctx context.Context, user, host, db string, port, maxAttempts int) (*pgxpool.Pool, error) {
+func PGXNew(ctx context.Context, user, host, db, port string, maxAttempts int) (*pgxpool.Pool, error) {
 
 	dsn := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s",
@@ -17,9 +17,8 @@ func PGXNew(ctx context.Context, user, host, db string, port, maxAttempts int) (
 	)
 
 	var pool *pgxpool.Pool
-	var err error
 
-	err = DoWithTries(func() error {
+	err := DoWithTries(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		var err error

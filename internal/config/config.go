@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"time"
 )
 
 type Config struct {
@@ -17,16 +18,16 @@ type Servers struct {
 }
 type PrimaryDB struct {
 	Host        string `json:"host"`
-	Port        int    `json:"port"`
+	Port        string `json:"port"`
 	User        string `json:"user"`
 	Dbname      string `json:"dbname"`
 	MaxAttempts int    `json:"max_attempts"`
 }
 type HTTPServer struct {
-	Port        int    `json:"port"`
-	Host        string `json:"host"`
-	Timeout     int    `json:"timeout"`
-	IdleTimeout int    `json:"idle_Timeout"`
+	Port        string        `json:"port"`
+	Host        string        `json:"host"`
+	Timeout     time.Duration `json:"timeout"`
+	IdleTimeout time.Duration `json:"idle_Timeout"`
 }
 
 func MustLoadConfig() *Config {
