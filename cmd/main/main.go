@@ -3,15 +3,16 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/Sanchir01/avito-testovoe/internal/app"
-	httpserver "github.com/Sanchir01/avito-testovoe/internal/servers/http"
-	httphandlers "github.com/Sanchir01/avito-testovoe/internal/servers/http/handlers"
-	"github.com/fatih/color"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Sanchir01/avito-testovoe/internal/app"
+	httpserver "github.com/Sanchir01/avito-testovoe/internal/servers/http"
+	httphandlers "github.com/Sanchir01/avito-testovoe/internal/servers/http/handlers"
+	"github.com/fatih/color"
 )
 
 func main() {
@@ -36,7 +37,6 @@ func main() {
 				env.Lg.Error("Listen server error", slog.String("error", err.Error()))
 				return
 			}
-
 		}
 	}(ctx)
 

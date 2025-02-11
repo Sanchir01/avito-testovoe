@@ -2,8 +2,9 @@ package app
 
 import (
 	"context"
-	"github.com/Sanchir01/avito-testovoe/internal/config"
 	"log/slog"
+
+	"github.com/Sanchir01/avito-testovoe/internal/config"
 )
 
 type Env struct {
@@ -21,7 +22,7 @@ func NewEnv() (*Env, error) {
 		return nil, err
 	}
 	repositories := NewRepositories(primarydb)
-	services := NewServices(repositories)
+	services := NewServices(repositories, primarydb)
 	env := Env{
 		Lg:       logger,
 		Cfg:      cfg,
