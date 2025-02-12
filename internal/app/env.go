@@ -10,7 +10,8 @@ import (
 type Env struct {
 	Lg       *slog.Logger
 	Cfg      *config.Config
-	Services *Services
+	Database *Database
+	Handlers *Handlers
 }
 
 func NewEnv() (*Env, error) {
@@ -23,10 +24,12 @@ func NewEnv() (*Env, error) {
 	}
 	repositories := NewRepositories(primarydb)
 	services := NewServices(repositories, primarydb)
+	handlers := NewHandlers(services, logger)
 	env := Env{
 		Lg:       logger,
 		Cfg:      cfg,
-		Services: services,
+		Database: primarydb,
+		Handlers: handlers,
 	}
 
 	return &env, nil

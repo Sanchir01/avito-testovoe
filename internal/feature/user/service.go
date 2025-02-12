@@ -2,7 +2,9 @@ package user
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -25,7 +27,18 @@ func NewService(r *Repository, db *pgxpool.Pool) *Service {
 func (s *Service) Auth(ctx context.Context, email, password string) (string, error) {
 	isExistUser, err := s.repository.GetUserByEmail(ctx, email)
 	expirationTimeRefresh := time.Now().Add(14 * 24 * time.Hour)
-	if err != nil {
+	if err == nil {
+		decodepass, err := base64.StdEncoding.DecodeString(isExistUser.Password)
+		if err != nil {
+			return "", err
+		}
+		verifypass := VerifyPassword(
+			decodepass,
+			password,
+		)
+		if !verifypass {
+			return "", fmt.Errorf("Неправильный пароль")
+		}
 		jwttoken, err := GenerateJwtToken(isExistUser.ID, expirationTimeRefresh)
 		if err != nil {
 			slog.Error("GenerateJwtToken err:", slog.Any("err", err))
@@ -58,6 +71,9 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	id, err := s.repository.CreateUser(ctx, email, hashedPassword, tx)
 	jwttoken, err := GenerateJwtToken(*id, expirationTimeRefresh)
 	if err != nil {
+		return "", err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return "", err
 	}
 	return jwttoken, nil

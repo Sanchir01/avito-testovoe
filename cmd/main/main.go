@@ -29,20 +29,23 @@ func main() {
 
 	env.Lg.Debug(green("🚀 Server started successfully!"),
 		slog.String("time", time.Now().Format("2006-01-02 15:04:05")),
+		slog.String("port", env.Cfg.Servers.HTTPServer.Port),
 	)
 
-	go func(ctx context.Context) {
-		if err := serve.Run(httphandlers.StartHTTTPHandlers(ctx)); err != nil {
+	go func() {
+		if err := serve.Run(httphandlers.StartHTTTPHandlers(env.Handlers)); err != nil {
 			if !errors.Is(err, context.Canceled) {
 				env.Lg.Error("Listen server error", slog.String("error", err.Error()))
 				return
 			}
 		}
-	}(ctx)
+	}()
 
 	<-ctx.Done()
 	if err := serve.Gracefull(ctx); err != nil {
 		env.Lg.Error("server gracefull")
 	}
-
+	if err := env.Database.Close(); err != nil {
+		env.Lg.Error("Close database", slog.String("error", err.Error()))
+	}
 }
