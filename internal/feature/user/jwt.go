@@ -19,7 +19,6 @@ type Claims struct {
 func GenerateJwtToken(id uuid.UUID, expire time.Time) (string, error) {
 	claim := &Claims{
 		ID: id,
-
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expire),
 		},
@@ -55,7 +54,7 @@ func ParseToken(tokenString string) (*Claims, error) {
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}
-	
+
 	return nil, errors.New("invalid token")
 
 }

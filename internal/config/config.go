@@ -53,6 +53,6 @@ func MustLoadConfig() *Config {
 		log.Fatalf("Failed to read config: %v", err)
 
 	}
-	log.Printf("Конфигурация загружена: %+v", cfg)
+	
 	return &cfg
 }

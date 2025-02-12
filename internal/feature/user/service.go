@@ -48,13 +48,16 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	}
 	conn, err := s.primaryDB.Acquire(ctx)
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
 	defer conn.Release()
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
+
 	defer func() {
 		if err != nil {
 			rollbackErr := tx.Rollback(ctx)
@@ -66,15 +69,23 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	}()
 	hashedPassword, err := GeneratePasswordHash(password)
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
 	id, err := s.repository.CreateUser(ctx, email, hashedPassword, tx)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
 	jwttoken, err := GenerateJwtToken(*id, expirationTimeRefresh)
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
 	if err := tx.Commit(ctx); err != nil {
+		slog.Error("tx.Commit error", slog.Any("err", err))
 		return "", err
 	}
+
 	return jwttoken, nil
 }

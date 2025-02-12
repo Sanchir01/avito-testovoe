@@ -48,7 +48,7 @@ func (r *Repository) CreateUser(ctx context.Context, email string, password []by
 	query, arg, err := sq.
 		Insert("users").
 		Columns("password", "email").
-		Values(email, password).
+		Values(password, email).
 		Suffix("RETURNING id,password").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
