@@ -27,7 +27,7 @@ func main() {
 	defer cancel()
 	green := color.New(color.FgGreen).SprintFunc()
 
-	env.Lg.Debug(green("🚀 Server started successfully!"),
+	env.Lg.Info(green("🚀 Server started successfully!"),
 		slog.String("time", time.Now().Format("2006-01-02 15:04:05")),
 		slog.String("port", env.Cfg.Servers.HTTPServer.Port),
 	)
@@ -39,6 +39,7 @@ func main() {
 				return
 			}
 		}
+
 	}()
 
 	<-ctx.Done()

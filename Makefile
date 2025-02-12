@@ -25,3 +25,6 @@ build:
 
 run: build	lint
 	./.bin/main
+
+seed:
+	go run cmd/seed/main.go

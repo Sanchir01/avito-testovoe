@@ -5,11 +5,15 @@ import (
 	"log/slog"
 	"net/http"
 
+	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
+
 	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	sl "github.com/Sanchir01/avito-testovoe/pkg/lib/log"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type AuthRequest struct {
@@ -68,4 +72,39 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		Response: api.OK(),
 		Token:    token,
 	})
+}
+
+func (h *Handler) BuyProductHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handlers.buyProduct"
+	log := h.Log.With(
+		slog.String("op", op),
+		slog.String("request_id", middleware.GetReqID(r.Context())),
+	)
+
+	productID := chi.URLParam(r, "item")
+	productuuid, err := uuid.Parse(productID)
+	if err != nil {
+		log.Error("failed to parse product uuid", slog.String("productID", productID))
+		render.JSON(w, r, api.Error("failed buy product"))
+		return
+	}
+	userID, ok := r.Context().Value(contextkey.UserIDCtxKey).(string)
+	if !ok {
+		log.Error("failed to parse context user uuid", slog.String("userid", userID))
+		render.JSON(w, r, api.Error("failed buy product"))
+		return
+	}
+	useruuid, err := uuid.Parse(userID)
+	if err != nil {
+		log.Error("failed to parse product uuid", slog.String("productID", productID))
+		render.JSON(w, r, api.Error("failed buy product"))
+		return
+	}
+
+	log.Info("attribute", slog.Any("userId", userID), slog.Any("productID", productuuid))
+	if err := h.Service.BuyProduct(r.Context(), useruuid, productuuid); err != nil {
+		log.Error("failed to buy product", sl.Err(err))
+		render.JSON(w, r, api.Error("failed, buy product"))
+		return
+	}
 }

@@ -5,18 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
 	"github.com/Sanchir01/avito-testovoe/internal/feature/user"
 )
-
-type contextKey string
-
-const userCtxKey contextKey = "userID"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "missing Authorization header", http.StatusUnauthorized)
+			http.Error(w, "Unautorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -32,7 +29,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userCtxKey, users.ID)
+		ctx := context.WithValue(r.Context(), contextkey.UserIDCtxKey, users.ID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

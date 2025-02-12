@@ -16,12 +16,13 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 	router.Route("/api", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(AuthMiddleware)
-			r.Get("/coin", func(w http.ResponseWriter, _ *http.Request) {
+			r.Get("/info", func(w http.ResponseWriter, _ *http.Request) {
 				if _, err := w.Write([]byte("Hello, World!")); err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					return
 				}
 			})
+			r.Get("/buy/{item}", handlers.UserHandler.BuyProductHandler)
 		})
 		r.Post("/auth", handlers.UserHandler.AuthHandler)
 	})

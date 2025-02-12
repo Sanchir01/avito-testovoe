@@ -36,13 +36,11 @@ func GenerateJwtToken(id uuid.UUID, expire time.Time) (string, error) {
 }
 
 func ParseToken(tokenString string) (*Claims, error) {
-	// Парсинг токена с использованием функции обратного вызова для получения секретного ключа
+
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		// Проверка используемого метода подписи
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		// Возвращаем секретный ключ
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 
@@ -50,7 +48,6 @@ func ParseToken(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
-	// Проверка валидности токена и получение claims
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 		return claims, nil
 	}

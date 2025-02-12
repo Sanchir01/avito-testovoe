@@ -8,13 +8,16 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/Sanchir01/avito-testovoe/internal/feature/product"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service struct {
-	repository *Repository
-	primaryDB  *pgxpool.Pool
+	repository        *Repository
+	productRepository *product.Repository
+	primaryDB         *pgxpool.Pool
 }
 
 func NewService(r *Repository, db *pgxpool.Pool) *Service {
@@ -48,13 +51,12 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	}
 	conn, err := s.primaryDB.Acquire(ctx)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	defer conn.Release()
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		fmt.Println(err)
+
 		return "", err
 	}
 
@@ -69,23 +71,62 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	}()
 	hashedPassword, err := GeneratePasswordHash(password)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	id, err := s.repository.CreateUser(ctx, email, hashedPassword, tx)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	jwttoken, err := GenerateJwtToken(*id, expirationTimeRefresh)
 	if err != nil {
-		fmt.Println(err)
+
 		return "", err
 	}
 	if err := tx.Commit(ctx); err != nil {
-		slog.Error("tx.Commit error", slog.Any("err", err))
 		return "", err
 	}
 
 	return jwttoken, nil
+}
+
+func (s *Service) BuyProduct(ctx context.Context, userID, productID uuid.UUID) error {
+	product, err := s.productRepository.GetProductByID(ctx, productID)
+	if err != nil {
+		return err
+	}
+	user, err := s.repository.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	cantbuyproduct := user.Coins - product.Price
+
+	if cantbuyproduct < 0 {
+		return fmt.Errorf("Недостаточно монет")
+	}
+	conn, err := s.primaryDB.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+
+		return err
+	}
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback(ctx)
+			if rollbackErr != nil {
+				err = errors.Join(err, rollbackErr)
+				return
+			}
+		}
+	}()
+	if err := s.repository.UpdateUserCoin(ctx, userID, cantbuyproduct, tx); err != nil {
+		return err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	return nil
 }
