@@ -1,8 +1,9 @@
 package httphandlers
 
 import (
-	"github.com/Sanchir01/avito-testovoe/internal/app"
 	"net/http"
+
+	"github.com/Sanchir01/avito-testovoe/internal/app"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,12 +21,10 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 					return
 				}
-
 			})
 		})
 		r.Post("/auth", handlers.UserHandler.AuthHandler)
 	})
 
 	return router
-
 }

@@ -47,12 +47,11 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*Databas
 func (r *Repository) CreateUser(ctx context.Context, email string, password []byte, tx pgx.Tx) (*uuid.UUID, error) {
 	query, arg, err := sq.
 		Insert("users").
-		Columns("password", "email").
-		Values(password, email).
-		Suffix("RETURNING id,password").
+		Columns("email", "password").
+		Values(email, password).
+		Suffix("RETURNING id, password").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +63,7 @@ func (r *Repository) CreateUser(ctx context.Context, email string, password []by
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("неправильный email")
 		}
+		return nil, err
 	}
 	return &id, nil
 }

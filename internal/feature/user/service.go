@@ -36,7 +36,7 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 			decodepass,
 			password,
 		)
-		if !verifypass {
+		if verifypass {
 			return "", fmt.Errorf("Неправильный пароль")
 		}
 		jwttoken, err := GenerateJwtToken(isExistUser.ID, expirationTimeRefresh)

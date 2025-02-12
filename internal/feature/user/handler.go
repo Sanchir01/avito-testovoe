@@ -2,13 +2,14 @@ package user
 
 import (
 	"errors"
+	"log/slog"
+	"net/http"
+
 	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	sl "github.com/Sanchir01/avito-testovoe/pkg/lib/log"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
-	"log/slog"
-	"net/http"
 )
 
 type AuthRequest struct {
