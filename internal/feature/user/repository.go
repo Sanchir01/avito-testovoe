@@ -76,7 +76,7 @@ func (r *Repository) GetUserByID(ctx context.Context, id uuid.UUID) (*DatabaseUs
 	defer conn.Release()
 
 	query, arg, err := sq.
-		Select("id, email,password,coins, version").
+		Select("id, email,coin, version").
 		From("public.users").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
@@ -86,7 +86,7 @@ func (r *Repository) GetUserByID(ctx context.Context, id uuid.UUID) (*DatabaseUs
 		return nil, err
 	}
 	var userDB DatabaseUser
-	if err := conn.QueryRow(ctx, query, arg...).Scan(&userDB.ID, &userDB.Email, &userDB.Password,
+	if err := conn.QueryRow(ctx, query, arg...).Scan(&userDB.ID, &userDB.Email,
 		&userDB.Coins, &userDB.Version,
 	); err != nil {
 		return nil, err

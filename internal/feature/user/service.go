@@ -90,10 +90,9 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 }
 
 func (s *Service) BuyProduct(ctx context.Context, userID, productID uuid.UUID) error {
-	product, err := s.productRepository.GetProductByID(ctx, productID)
-	if err != nil {
-		return err
-	}
+	slog.Error("attribute", slog.Any("userId", userID), slog.Any("productID", productID))
+
+	slog.Error("product", product)
 	user, err := s.repository.GetUserByID(ctx, userID)
 	if err != nil {
 		return err

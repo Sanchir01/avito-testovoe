@@ -17,7 +17,6 @@ func NewService(r *Repository) *Service {
 }
 
 func (s *Service) GetProductByID(ctx context.Context, id uuid.UUID) (*DataBaseProduct, error) {
-
 	product, err := s.repository.GetProductByID(ctx, id)
 	if err != nil {
 		return nil, err

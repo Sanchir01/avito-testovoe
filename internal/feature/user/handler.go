@@ -2,10 +2,10 @@ package user
 
 import (
 	"errors"
+	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
+
 	"log/slog"
 	"net/http"
-
-	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
 
 	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	sl "github.com/Sanchir01/avito-testovoe/pkg/lib/log"
@@ -74,37 +74,40 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) BuyProductHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) BuyProductHandler(w http.ResponseWriter, req *http.Request) {
 	const op = "handlers.buyProduct"
 	log := h.Log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(r.Context())),
+		slog.String("request_id", middleware.GetReqID(req.Context())),
 	)
+	defer func() {
+		if r := recover(); r != nil {
+			// Логируем панику
+			log.Error("panic occurred", slog.Any("panic", r))
 
-	productID := chi.URLParam(r, "item")
+			render.JSON(w, req, api.Error("internal server error"))
+		}
+	}()
+	productID := chi.URLParam(req, "item")
 	productuuid, err := uuid.Parse(productID)
 	if err != nil {
 		log.Error("failed to parse product uuid", slog.String("productID", productID))
-		render.JSON(w, r, api.Error("failed buy product"))
-		return
-	}
-	userID, ok := r.Context().Value(contextkey.UserIDCtxKey).(string)
-	if !ok {
-		log.Error("failed to parse context user uuid", slog.String("userid", userID))
-		render.JSON(w, r, api.Error("failed buy product"))
-		return
-	}
-	useruuid, err := uuid.Parse(userID)
-	if err != nil {
-		log.Error("failed to parse product uuid", slog.String("productID", productID))
-		render.JSON(w, r, api.Error("failed buy product"))
+		render.JSON(w, req, api.Error("failed buy product"))
 		return
 	}
 
-	log.Info("attribute", slog.Any("userId", userID), slog.Any("productID", productuuid))
-	if err := h.Service.BuyProduct(r.Context(), useruuid, productuuid); err != nil {
+	claims, ok := req.Context().Value(contextkey.UserIDCtxKey).(*Claims)
+
+	if !ok {
+		log.Error("failed to parse product uuid", slog.String("productID", productID))
+		render.JSON(w, req, api.Error("failed buy product"))
+		return
+	}
+
+	log.Info("attribute", slog.Any("userId", claims.ID), slog.Any("productID", productuuid))
+	if err := h.Service.BuyProduct(req.Context(), claims.ID, productuuid); err != nil {
 		log.Error("failed to buy product", sl.Err(err))
-		render.JSON(w, r, api.Error("failed, buy product"))
+		render.JSON(w, req, api.Error("failed, buy product"))
 		return
 	}
 }

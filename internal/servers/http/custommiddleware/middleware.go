@@ -1,7 +1,9 @@
-package httphandlers
+package custommiddleware
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -28,8 +30,15 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
-
-		ctx := context.WithValue(r.Context(), contextkey.UserIDCtxKey, users.ID)
+		slog.Error("user context", users)
+		ctx := context.WithValue(r.Context(), contextkey.UserIDCtxKey, users)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+func GetJWTClaimsFromCtx(ctx context.Context) (*user.Claims, error) {
+	claims, ok := ctx.Value(contextkey.UserIDCtxKey).(*user.Claims)
+	if !ok {
+		return nil, errors.New("no JWT claims found in context")
+	}
+	return claims, nil
 }

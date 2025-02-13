@@ -1,6 +1,7 @@
 package httphandlers
 
 import (
+	"github.com/Sanchir01/avito-testovoe/internal/servers/http/custommiddleware"
 	"net/http"
 
 	"github.com/Sanchir01/avito-testovoe/internal/app"
@@ -15,7 +16,7 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 
 	router.Route("/api", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
-			r.Use(AuthMiddleware)
+			r.Use(custommiddleware.AuthMiddleware)
 			r.Get("/info", func(w http.ResponseWriter, _ *http.Request) {
 				if _, err := w.Write([]byte("Hello, World!")); err != nil {
 					http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -23,6 +24,7 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 				}
 			})
 			r.Get("/buy/{item}", handlers.UserHandler.BuyProductHandler)
+
 		})
 		r.Post("/auth", handlers.UserHandler.AuthHandler)
 	})

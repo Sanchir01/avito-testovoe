@@ -33,20 +33,22 @@ func (s *Service) CreateProduct(ctx context.Context, title, slug string, price i
 	}
 	return nil
 }
+
 func (r *Repository) GetProductByID(ctx context.Context, id uuid.UUID) (*DataBaseProduct, error) {
-	
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		slog.Error("Failed to acquire DB connection", slog.String("error", err.Error()))
 		return nil, err
 	}
 	defer conn.Release()
+
 	query, args, err := sq.
 		Select("id, title,slug,version,price").
-		From("public.product").
+		From("product").
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+	slog.Error("query", query)
 	if err != nil {
 		return nil, err
 	}
