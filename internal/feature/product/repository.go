@@ -18,7 +18,7 @@ type Repository struct {
 func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{primaryDB: db}
 }
-func (s *Service) CreateProduct(ctx context.Context, title, slug string, price int, tx pgx.Tx) error {
+func (r *Repository) CreateProduct(ctx context.Context, title, slug string, price int, tx pgx.Tx) error {
 	query, arg, err := sq.Insert("product").
 		Columns("title", "slug", "price").
 		Values(title, slug, price).
@@ -35,6 +35,7 @@ func (s *Service) CreateProduct(ctx context.Context, title, slug string, price i
 }
 
 func (r *Repository) GetProductByID(ctx context.Context, id uuid.UUID) (*DataBaseProduct, error) {
+	slog.Error("repo", r)
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		slog.Error("Failed to acquire DB connection", slog.String("error", err.Error()))

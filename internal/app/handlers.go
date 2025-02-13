@@ -1,8 +1,9 @@
 package app
 
 import (
-	"github.com/Sanchir01/avito-testovoe/internal/feature/user"
 	"log/slog"
+
+	"github.com/Sanchir01/avito-testovoe/internal/feature/user"
 )
 
 type Handlers struct {

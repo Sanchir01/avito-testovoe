@@ -12,7 +12,7 @@ type Repositories struct {
 
 func NewRepositories(database *Database) *Repositories {
 	return &Repositories{
-		ProductRepository: product.NewRepository(database.PrimaryDB),
 		UserRepository:    user.NewRepository(database.PrimaryDB),
+		ProductRepository: product.NewRepository(database.PrimaryDB),
 	}
 }

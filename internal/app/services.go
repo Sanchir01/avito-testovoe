@@ -13,6 +13,6 @@ type Services struct {
 func NewServices(r *Repositories, db *Database) *Services {
 	return &Services{
 		ProductService: product.NewService(r.ProductRepository),
-		UserService:    user.NewService(r.UserRepository, db.PrimaryDB),
+		UserService:    user.NewService(r.UserRepository, r.ProductRepository, db.PrimaryDB),
 	}
 }

@@ -20,10 +20,11 @@ type Service struct {
 	primaryDB         *pgxpool.Pool
 }
 
-func NewService(r *Repository, db *pgxpool.Pool) *Service {
+func NewService(r *Repository, product *product.Repository, db *pgxpool.Pool) *Service {
 	return &Service{
-		repository: r,
-		primaryDB:  db,
+		repository:        r,
+		primaryDB:         db,
+		productRepository: product,
 	}
 }
 
@@ -90,18 +91,18 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 }
 
 func (s *Service) BuyProduct(ctx context.Context, userID, productID uuid.UUID) error {
-	slog.Error("attribute", slog.Any("userId", userID), slog.Any("productID", productID))
-
-	slog.Error("product", product)
+	productById, err := s.productRepository.GetProductByID(ctx, productID)
 	user, err := s.repository.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
-	cantbuyproduct := user.Coins - product.Price
+	coins := user.Coins - productById.Price
+	countpositive := IsPositiveCount(user.Coins, productById.Price)
 
-	if cantbuyproduct < 0 {
+	if !countpositive {
 		return fmt.Errorf("Недостаточно монет")
 	}
+
 	conn, err := s.primaryDB.Acquire(ctx)
 	if err != nil {
 		return err
@@ -121,11 +122,72 @@ func (s *Service) BuyProduct(ctx context.Context, userID, productID uuid.UUID) e
 			}
 		}
 	}()
-	if err := s.repository.UpdateUserCoin(ctx, userID, cantbuyproduct, tx); err != nil {
+	if err := s.repository.RecordPurchase(ctx, userID, productID, tx); err != nil {
+		return err
+	}
+	if err := s.repository.UpdateUserCoinByID(ctx, userID, coins, tx); err != nil {
 		return err
 	}
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *Service) SendCoins(ctx context.Context, userId uuid.UUID, senderEmail string, amount int64) error {
+	conn, err := s.primaryDB.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Release()
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+
+		return err
+	}
+	defer func() {
+		if err != nil {
+			rollbackErr := tx.Rollback(ctx)
+			if rollbackErr != nil {
+				err = errors.Join(err, rollbackErr)
+				return
+			}
+		}
+	}()
+	userSender, err := s.repository.GetUserByID(ctx, userId)
+	if err != nil {
+		return err
+	}
+	countpositive := IsPositiveCount(userSender.Coins, amount)
+
+	if !countpositive {
+		return fmt.Errorf("Недостаточно монет")
+	}
+	userReceiver, err := s.repository.GetUserByEmail(ctx, senderEmail)
+
+	if err != nil {
+		return err
+	}
+
+	senderBalance := userSender.Coins - amount
+	receiverBalance := userReceiver.Coins + amount
+	slog.Info("balance start", userReceiver.Coins, "after plus", receiverBalance)
+	if err := s.repository.UpdateUserCoinByID(ctx, userSender.ID, senderBalance, tx); err != nil {
+		return err
+	}
+	if err := s.repository.UpdateUserCoinByID(ctx, userReceiver.ID, receiverBalance, tx); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+func IsPositiveCount(a, b int64) bool {
+	c := a + b
+	if c < 0 {
+		return false
+	}
+	return true
 }

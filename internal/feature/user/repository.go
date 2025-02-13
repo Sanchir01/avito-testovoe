@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -25,21 +26,22 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*Databas
 		return nil, err
 	}
 	defer conn.Release()
+
 	query, arg, err := sq.
-		Select("id,password,password").
+		Select("id, email,coin, version").
 		From("public.users").
 		Where(sq.Eq{"email": email}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
+
 	if err != nil {
 		return nil, err
 	}
 	var userDB DatabaseUser
-
-	if err := conn.QueryRow(ctx, query, arg...).Scan(&userDB.ID, &userDB.Password, &userDB.Email); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("неправильный email")
-		}
+	if err := conn.QueryRow(ctx, query, arg...).Scan(&userDB.ID, &userDB.Email,
+		&userDB.Coins, &userDB.Version,
+	); err != nil {
+		return nil, err
 	}
 	return &userDB, nil
 }
@@ -94,7 +96,7 @@ func (r *Repository) GetUserByID(ctx context.Context, id uuid.UUID) (*DatabaseUs
 	return &userDB, nil
 }
 
-func (r *Repository) UpdateUserCoin(ctx context.Context, userID uuid.UUID, coins int64, tx pgx.Tx) error {
+func (r *Repository) UpdateUserCoinByID(ctx context.Context, userID uuid.UUID, coins int64, tx pgx.Tx) error {
 	query, arg, err := sq.
 		Update("users").
 		Set("coin", coins).
@@ -108,6 +110,59 @@ func (r *Repository) UpdateUserCoin(ctx context.Context, userID uuid.UUID, coins
 
 	if exceErr != nil {
 		return fmt.Errorf("failed to update user coins: %s", exceErr.Error())
+	}
+	return nil
+}
+func (r *Repository) RecordPurchase(ctx context.Context, userID, productID uuid.UUID, tx pgx.Tx) error {
+	query, args, err := sq.
+		Insert("users_products").
+		Columns("user_id", "product_id").
+		Values(userID, productID).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		log.Printf("failed to build query: %v", err)
+		return err
+	}
+
+	_, err = tx.Exec(ctx, query, args...)
+	if err != nil {
+		log.Printf("failed to execute query: %v", err)
+		return err
+	}
+
+	return nil
+}
+func (r *Repository) UpdateUserCoinByEmail(ctx context.Context, email string, coins int64, tx pgx.Tx) error {
+	query, arg, err := sq.
+		Update("users").
+		Set("coin", coins).
+		Where(sq.Eq{"email": email}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+	_, exceErr := tx.Exec(ctx, query, arg...)
+
+	if exceErr != nil {
+		return fmt.Errorf("failed to update user coins: %s", exceErr.Error())
+	}
+	return nil
+}
+func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID uuid.UUID, amount int, tx pgx.Tx) error {
+	query, args, err := sq.
+		Insert("transactions_coins").
+		Columns("sender_id", "receiver_id", "amount").
+		Values(senderID, receiverID, amount).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(ctx, query, args...); err != nil {
+		return err
 	}
 	return nil
 }

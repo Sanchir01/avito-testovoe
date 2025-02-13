@@ -2,10 +2,10 @@ package user
 
 import (
 	"errors"
-	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
-
 	"log/slog"
 	"net/http"
+
+	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
 
 	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	sl "github.com/Sanchir01/avito-testovoe/pkg/lib/log"
@@ -20,11 +20,18 @@ type AuthRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6"`
 }
+type BuyProductResponse struct {
+	api.Response
+	Ok string `json:"ok"`
+}
 type AuthResponse struct {
 	api.Response
 	Token string `json:"token"`
 }
-
+type SendCoinsRequest struct {
+	Email string `json:"toUser" validate:"required,email"`
+	Coins int64  `json:"amount" validate:"required"`
+}
 type Handler struct {
 	Service *Service
 	Log     *slog.Logger
@@ -35,6 +42,41 @@ func NewHandler(s *Service, lg *slog.Logger) *Handler {
 		Service: s,
 		Log:     lg,
 	}
+}
+
+func (h *Handler) BuyProductHandler(w http.ResponseWriter, req *http.Request) {
+	const op = "handlers.buyProduct"
+	log := h.Log.With(
+		slog.String("op", op),
+		slog.String("request_id", middleware.GetReqID(req.Context())),
+	)
+
+	productID := chi.URLParam(req, "item")
+	productuuid, err := uuid.Parse(productID)
+	if err != nil {
+		log.Error("failed to parse product uuid", slog.String("productID", productID))
+		render.JSON(w, req, api.Error("failed buy product"))
+		return
+	}
+
+	claims, ok := req.Context().Value(contextkey.UserIDCtxKey).(*Claims)
+
+	if !ok {
+		log.Error("failed to parse product uuid", slog.String("productID", productID))
+		render.JSON(w, req, api.Error("failed buy product"))
+		return
+	}
+
+	log.Info("attribute", slog.Any("userId", claims.ID), slog.Any("productID", productuuid))
+	if err := h.Service.BuyProduct(req.Context(), claims.ID, productuuid); err != nil {
+		log.Error("failed to buy product", sl.Err(err))
+		render.JSON(w, req, api.Error("failed, buy product"))
+		return
+	}
+	render.JSON(w, req, BuyProductResponse{
+		Response: api.OK(),
+		Ok:       "success",
+	})
 }
 
 func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +108,7 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, api.Error("failed, auth user"))
 		return
 	}
-	log.Info("sucess auth")
+	log.Info("success auth")
 
 	render.JSON(w, r, AuthResponse{
 		Response: api.OK(),
@@ -74,40 +116,39 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) BuyProductHandler(w http.ResponseWriter, req *http.Request) {
-	const op = "handlers.buyProduct"
+func (h *Handler) SendUserCoinsHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handlers.sendUserCoins"
 	log := h.Log.With(
 		slog.String("op", op),
-		slog.String("request_id", middleware.GetReqID(req.Context())),
+		slog.String("request_id", middleware.GetReqID(r.Context())),
 	)
-	defer func() {
-		if r := recover(); r != nil {
-			// Логируем панику
-			log.Error("panic occurred", slog.Any("panic", r))
-
-			render.JSON(w, req, api.Error("internal server error"))
-		}
-	}()
-	productID := chi.URLParam(req, "item")
-	productuuid, err := uuid.Parse(productID)
-	if err != nil {
-		log.Error("failed to parse product uuid", slog.String("productID", productID))
-		render.JSON(w, req, api.Error("failed buy product"))
+	var req SendCoinsRequest
+	if err := render.DecodeJSON(r.Body, &req); err != nil {
+		log.Error("failed to decode request body", slog.Any("err", err))
+		render.JSON(w, r, api.Error("Ошибка при валидации данных"))
 		return
 	}
-
-	claims, ok := req.Context().Value(contextkey.UserIDCtxKey).(*Claims)
-
+	log.Info("request body decoded", slog.Any("request", req))
+	if err := validator.New().Struct(req); err != nil {
+		log.Error("invalid request", sl.Err(err))
+		render.JSON(w, r, api.Error("invalid request"))
+		return
+	}
+	claims, ok := r.Context().Value(contextkey.UserIDCtxKey).(*Claims)
 	if !ok {
-		log.Error("failed to parse product uuid", slog.String("productID", productID))
-		render.JSON(w, req, api.Error("failed buy product"))
+		log.Error("failed to parse product uuid")
+		render.JSON(w, r, api.Error("failed send coins"))
 		return
 	}
 
-	log.Info("attribute", slog.Any("userId", claims.ID), slog.Any("productID", productuuid))
-	if err := h.Service.BuyProduct(req.Context(), claims.ID, productuuid); err != nil {
-		log.Error("failed to buy product", sl.Err(err))
-		render.JSON(w, req, api.Error("failed, buy product"))
+	if err := h.Service.SendCoins(r.Context(), claims.ID, req.Email, req.Coins); err != nil {
+		log.Error("failed send coins", sl.Err(err))
+		render.JSON(w, r, api.Error("failed send coins"))
 		return
 	}
+	log.Info("success send coins")
+
+	render.JSON(w, r, api.OK())
 }
+
+func (h *Handler) GetInfoCoinsHandler(w http.ResponseWriter, r *http.Request) {}

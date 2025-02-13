@@ -1,8 +1,9 @@
 package httphandlers
 
 import (
-	"github.com/Sanchir01/avito-testovoe/internal/servers/http/custommiddleware"
 	"net/http"
+
+	"github.com/Sanchir01/avito-testovoe/internal/servers/http/custommiddleware"
 
 	"github.com/Sanchir01/avito-testovoe/internal/app"
 
@@ -24,6 +25,8 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 				}
 			})
 			r.Get("/buy/{item}", handlers.UserHandler.BuyProductHandler)
+			r.Get("/info", handlers.UserHandler.GetInfoCoinsHandler)
+			r.Post("/sendCoin", handlers.UserHandler.SendUserCoinsHandler)
 
 		})
 		r.Post("/auth", handlers.UserHandler.AuthHandler)
