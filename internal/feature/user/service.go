@@ -5,9 +5,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	"log/slog"
 	"time"
+
+	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 
 	"github.com/Sanchir01/avito-testovoe/internal/feature/product"
 	"github.com/google/uuid"
@@ -58,7 +59,6 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	defer conn.Release()
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-
 		return "", err
 	}
 
@@ -81,7 +81,6 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 	}
 	jwttoken, err := GenerateJwtToken(*id, expirationTimeRefresh)
 	if err != nil {
-
 		return "", err
 	}
 	if err := tx.Commit(ctx); err != nil {
@@ -110,7 +109,6 @@ func (s *Service) BuyProduct(ctx context.Context, userID, productID uuid.UUID) e
 	defer conn.Release()
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-
 		return err
 	}
 	defer func() {
@@ -142,7 +140,6 @@ func (s *Service) SendCoins(ctx context.Context, userId uuid.UUID, senderEmail s
 	defer conn.Release()
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-
 		return err
 	}
 	defer func() {
@@ -164,7 +161,6 @@ func (s *Service) SendCoins(ctx context.Context, userId uuid.UUID, senderEmail s
 		return fmt.Errorf("Недостаточно монет")
 	}
 	userReceiver, err := s.repository.GetUserByEmail(ctx, senderEmail)
-
 	if err != nil {
 		return err
 	}
@@ -181,7 +177,9 @@ func (s *Service) SendCoins(ctx context.Context, userId uuid.UUID, senderEmail s
 	if err := s.repository.UpdateUserCoinByID(ctx, userReceiver.ID, receiverBalance, tx); err != nil {
 		return err
 	}
-
+	if err := s.repository.TransactionCoins(ctx, userSender.ID, userReceiver.ID, amount, tx); err != nil {
+		return err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return err
 	}

@@ -2,9 +2,10 @@ package user
 
 import (
 	"errors"
-	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
 	"log/slog"
 	"net/http"
+
+	contextkey "github.com/Sanchir01/avito-testovoe/internal/context"
 
 	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	sl "github.com/Sanchir01/avito-testovoe/pkg/lib/log"
@@ -15,6 +16,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type AuthRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+}
+type SendCoinsRequest struct {
+	Email string `json:"toUser" validate:"required,email"`
+	Coins int64  `json:"amount" validate:"required"`
+}
 type BuyProductResponse struct {
 	api.Response
 	Ok string `json:"ok"`
@@ -27,15 +36,6 @@ type AllUserCoinsInfoResponse struct {
 	api.Response
 	GetAllUserCoinsInfo *GetAllUserCoinsInfo
 }
-type AuthRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-}
-type SendCoinsRequest struct {
-	Email string `json:"toUser" validate:"required,email"`
-	Coins int64  `json:"amount" validate:"required"`
-}
-
 type Handler struct {
 	Service *Service
 	Log     *slog.Logger

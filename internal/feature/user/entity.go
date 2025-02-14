@@ -22,10 +22,10 @@ type Inventory struct {
 	Quantity int64  `json:"quantity"`
 }
 type CoinsHistory struct {
-	Received SenderInfo `json:"received"`
-	Send     SenderInfo `json:"send"`
+	Received []SendInfo `json:"received"`
+	Send     []SendInfo `json:"send"`
 }
-type SenderInfo struct {
+type SendInfo struct {
 	Username string `json:"fromUser"`
 	Amount   int64  `json:"amount"`
 }

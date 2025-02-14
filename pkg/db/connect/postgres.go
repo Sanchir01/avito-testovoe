@@ -3,13 +3,13 @@ package connect
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func PGXNew(ctx context.Context, user, host, db, port string, maxAttempts int) (*pgxpool.Pool, error) {
-
 	dsn := fmt.Sprintf(
 		"postgresql://%s:%s@%s:%s/%s",
 		user, os.Getenv("POSTGRES_PASSWORD"),
@@ -28,13 +28,13 @@ func PGXNew(ctx context.Context, user, host, db, port string, maxAttempts int) (
 		}
 		return nil
 	}, maxAttempts, 5*time.Second)
-
 	if err != nil {
 		return nil, err
 	}
 
 	return pool, nil
 }
+
 func DoWithTries(fn func() error, attemts int, delay time.Duration) (err error) {
 	for attemts > 0 {
 		if err = fn(); err != nil {

@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/samber/lo"
 	"log"
+
+	"github.com/samber/lo"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -34,7 +35,6 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (*Databas
 		Where(sq.Eq{"email": email}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,6 @@ func (r *Repository) GetUserByID(ctx context.Context, id uuid.UUID) (*DatabaseUs
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +113,7 @@ func (r *Repository) UpdateUserCoinByID(ctx context.Context, userID uuid.UUID, c
 	}
 	return nil
 }
+
 func (r *Repository) RecordPurchase(ctx context.Context, userID, productID uuid.UUID, tx pgx.Tx) error {
 	query, args, err := sq.
 		Insert("users_products").
@@ -134,6 +134,7 @@ func (r *Repository) RecordPurchase(ctx context.Context, userID, productID uuid.
 
 	return nil
 }
+
 func (r *Repository) UpdateUserCoinByEmail(ctx context.Context, email string, coins int64, tx pgx.Tx) error {
 	query, arg, err := sq.
 		Update("users").
@@ -152,7 +153,7 @@ func (r *Repository) UpdateUserCoinByEmail(ctx context.Context, email string, co
 	return nil
 }
 
-func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID uuid.UUID, amount int, tx pgx.Tx) error {
+func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID uuid.UUID, amount int64, tx pgx.Tx) error {
 	query, args, err := sq.
 		Insert("transactions_coins").
 		Columns("sender_id", "receiver_id", "amount").
@@ -168,6 +169,7 @@ func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID 
 	}
 	return nil
 }
+
 func (r *Repository) GetAllProductBuyUsers(ctx context.Context, userID uuid.UUID) ([]Inventory, error) {
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
@@ -184,7 +186,6 @@ func (r *Repository) GetAllProductBuyUsers(ctx context.Context, userID uuid.UUID
 		OrderBy("quantity DESC").
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -207,4 +208,15 @@ func (r *Repository) GetAllProductBuyUsers(ctx context.Context, userID uuid.UUID
 			Quantity: productAndCount.Count,
 		}
 	}), nil
+}
+
+func (r *Repository) GetAllUserCoinsHistory(ctx context.Context, userId uuid.UUID) (CoinsHistory, error) {
+	conn, err := r.primaryDB.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer conn.Release()
+
+	query, arg, err := sq.Select()
 }
