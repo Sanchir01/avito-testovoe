@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	"log/slog"
 	"time"
 
@@ -97,10 +98,9 @@ func (s *Service) BuyProduct(ctx context.Context, userID, productID uuid.UUID) e
 		return err
 	}
 	coins := user.Coins - productById.Price
-	countpositive := IsPositiveCount(user.Coins, productById.Price)
 
-	if !countpositive {
-		return fmt.Errorf("Недостаточно монет")
+	if coins < 0 {
+		return api.ErrInsufficientCoins
 	}
 
 	conn, err := s.primaryDB.Acquire(ctx)
@@ -169,6 +169,9 @@ func (s *Service) SendCoins(ctx context.Context, userId uuid.UUID, senderEmail s
 		return err
 	}
 
+	if userSender.ID == userReceiver.ID {
+		return api.ErrTransactionMyself
+	}
 	senderBalance := userSender.Coins - amount
 	receiverBalance := userReceiver.Coins + amount
 	slog.Info("balance start", userReceiver.Coins, "after plus", receiverBalance)
@@ -184,6 +187,24 @@ func (s *Service) SendCoins(ctx context.Context, userId uuid.UUID, senderEmail s
 	}
 	return nil
 }
+
+func (s *Service) GetAllUserCoinsInfo(ctx context.Context, userId uuid.UUID) (*GetAllUserCoinsInfo, error) {
+	user, err := s.repository.GetUserByID(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	products, err := s.repository.GetAllProductBuyUsers(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("get all user coin info", products)
+
+	return &GetAllUserCoinsInfo{
+		Coins:     user.Coins,
+		Inventory: products,
+	}, nil
+}
+
 func IsPositiveCount(a, b int64) bool {
 	c := a + b
 	if c < 0 {

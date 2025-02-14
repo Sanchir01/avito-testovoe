@@ -23,7 +23,7 @@ migrations-new:
 build:
 	go build -o ./.bin/main ./cmd/main/main.go
 
-run: build
+run: build	lint
 	./.bin/main
 
 seed:

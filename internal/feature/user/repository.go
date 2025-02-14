@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/samber/lo"
 	"log"
 
 	sq "github.com/Masterminds/squirrel"
@@ -150,6 +151,7 @@ func (r *Repository) UpdateUserCoinByEmail(ctx context.Context, email string, co
 	}
 	return nil
 }
+
 func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID uuid.UUID, amount int, tx pgx.Tx) error {
 	query, args, err := sq.
 		Insert("transactions_coins").
@@ -165,4 +167,44 @@ func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID 
 		return err
 	}
 	return nil
+}
+func (r *Repository) GetAllProductBuyUsers(ctx context.Context, userID uuid.UUID) ([]Inventory, error) {
+	conn, err := r.primaryDB.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer conn.Release()
+	query, args, err := sq.
+		Select("p.title", "COUNT(*)::int8 as quantity").
+		From("product p").
+		Join("users_products up ON p.id = up.product_id").
+		Where(sq.Eq{"up.user_id": userID}).
+		GroupBy("p.title").
+		OrderBy("quantity DESC").
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+	rows, err := conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var productsAndCounts []ProductCount
+	for rows.Next() {
+		var productAndCount ProductCount
+		if err := rows.Scan(&productAndCount.Title, &productAndCount.Count); err != nil {
+			return nil, err
+		}
+		productsAndCounts = append(productsAndCounts, productAndCount)
+	}
+	return lo.Map(productsAndCounts, func(productAndCount ProductCount, _ int) Inventory {
+		return Inventory{
+			Type:     productAndCount.Title,
+			Quantity: productAndCount.Count,
+		}
+	}), nil
 }

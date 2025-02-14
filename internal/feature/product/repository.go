@@ -35,7 +35,6 @@ func (r *Repository) CreateProduct(ctx context.Context, title, slug string, pric
 }
 
 func (r *Repository) GetProductByID(ctx context.Context, id uuid.UUID) (*DataBaseProduct, error) {
-	slog.Error("repo", r)
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		slog.Error("Failed to acquire DB connection", slog.String("error", err.Error()))
