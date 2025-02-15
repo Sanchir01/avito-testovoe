@@ -6,6 +6,8 @@ WORKDIR /app
 
 RUN apk --no-cache add bash git make gcc gettext musl-dev
 
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.4
+
 RUN go version
 
 COPY . .
