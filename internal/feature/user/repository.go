@@ -210,7 +210,7 @@ func (r *Repository) GetAllProductBuyUsers(ctx context.Context, userID uuid.UUID
 	}), nil
 }
 
-func (r *Repository) GetAllUserCoinsHistory(ctx context.Context, userId uuid.UUID) (CoinsHistory, error) {
+func (r *Repository) GetAllUserCoinsHistory(ctx context.Context, userID uuid.UUID) (*CoinsHistory, error) {
 	conn, err := r.primaryDB.Acquire(ctx)
 	if err != nil {
 		return nil, err
@@ -218,5 +218,45 @@ func (r *Repository) GetAllUserCoinsHistory(ctx context.Context, userId uuid.UUI
 
 	defer conn.Release()
 
-	query, arg, err := sq.Select()
+	query, args, err := sq.
+		Select("t.amount", "sender.id AS sender_id", "sender.email AS sender_name",
+			"receiver.id AS receiver_id", "receiver.email AS receiver_name").
+		From("transactions_coins t").
+		Join("users sender ON t.sender_id = sender.id").
+		Join("users receiver ON t.receiver_id = receiver.id").
+		Where(sq.Or{
+			sq.Eq{"t.sender_id": userID},
+			sq.Eq{"t.receiver_id": userID},
+		}).
+		PlaceholderFormat(sq.Dollar).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := conn.Query(ctx, query, args...)
+	defer rows.Close()
+	var senderCoinsInfo CoinsHistory
+
+	for rows.Next() {
+		var amount int64
+		var senderID, receiverID uuid.UUID
+		var senderName, receiverName string
+		if err := rows.Scan(&amount, &senderID, &senderName, &receiverID, &receiverName); err != nil {
+			return nil, err
+		}
+		if senderID == userID {
+			senderCoinsInfo.Send = append(senderCoinsInfo.Send, SendInfo{
+				Username: receiverName,
+				Amount:   amount,
+			})
+		} else {
+			senderCoinsInfo.Received = append(senderCoinsInfo.Received, SendInfo{
+				Username: senderName,
+				Amount:   amount,
+			})
+		}
+	}
+
+	return &senderCoinsInfo, nil
 }

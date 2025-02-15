@@ -196,10 +196,15 @@ func (s *Service) GetAllUserCoinsInfo(ctx context.Context, userId uuid.UUID) (*G
 		return nil, err
 	}
 	slog.Info("get all user coin info", products)
-
+	historyCoins, err := s.repository.GetAllUserCoinsHistory(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	slog.Info("history coinst", historyCoins)
 	return &GetAllUserCoinsInfo{
-		Coins:     user.Coins,
-		Inventory: products,
+		Coins:        user.Coins,
+		Inventory:    products,
+		CoinsHistory: *historyCoins,
 	}, nil
 }
 
