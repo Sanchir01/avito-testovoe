@@ -48,7 +48,6 @@ func (r *Repository) GetProductByID(ctx context.Context, id uuid.UUID) (*DataBas
 		Where(sq.Eq{"id": id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()
-	slog.Error("query", query)
 	if err != nil {
 		return nil, err
 	}

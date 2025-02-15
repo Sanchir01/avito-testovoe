@@ -235,6 +235,9 @@ func (r *Repository) GetAllUserCoinsHistory(ctx context.Context, userID uuid.UUI
 	}
 
 	rows, err := conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 	var senderCoinsInfo CoinsHistory
 
