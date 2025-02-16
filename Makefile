@@ -28,9 +28,10 @@ run: build	lint
 
 docker:
 		docker build -t avito .
-		docker-compose up
+		docker-compose up --build app
 
-test: run
+testing:
+		go test -v ./test/...
 
 seed:
 	go run cmd/seed/main.go

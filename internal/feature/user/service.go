@@ -16,12 +16,23 @@ import (
 )
 
 type Service struct {
-	repository        *Repository
-	productRepository *product.Repository
+	repository        ServiceUser
+	productRepository product.ServiceProduct
 	primaryDB         *pgxpool.Pool
 }
 
-func NewService(r *Repository, product *product.Repository, db *pgxpool.Pool) *Service {
+type ServiceUser interface {
+	GetAllProductBuyUsers(ctx context.Context, userID uuid.UUID) ([]Inventory, error)
+	GetAllUserCoinsHistory(ctx context.Context, userID uuid.UUID) (*CoinsHistory, error)
+	TransactionCoins(ctx context.Context, senderID, receiverID uuid.UUID, amount int64, tx pgx.Tx) error
+	RecordPurchase(ctx context.Context, userID, productID uuid.UUID, tx pgx.Tx) error
+	UpdateUserCoinByID(ctx context.Context, userID uuid.UUID, coins int64, tx pgx.Tx) error
+	GetUserByID(ctx context.Context, id uuid.UUID) (*DatabaseUser, error)
+	CreateUser(ctx context.Context, email string, password []byte, tx pgx.Tx) (*uuid.UUID, error)
+	GetUserByEmail(ctx context.Context, email string) (*DatabaseUser, error)
+}
+
+func NewService(r ServiceUser, product product.ServiceProduct, db *pgxpool.Pool) *Service {
 	return &Service{
 		repository:        r,
 		primaryDB:         db,
@@ -42,7 +53,7 @@ func (s *Service) Auth(ctx context.Context, email, password string) (string, err
 			password,
 		)
 		if verifypass {
-			return "", fmt.Errorf("Неправильный пароль")
+			return "", api.ErrWrongPasswordError
 		}
 		jwttoken, err := GenerateJwtToken(isExistUser.ID, expirationTimeRefresh)
 		if err != nil {

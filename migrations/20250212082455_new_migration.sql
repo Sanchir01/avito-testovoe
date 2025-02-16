@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-ALTER TABLE users ADD COLUMN coin INT NOT NULL DEFAULT 0 CHECK(coin >= 0);
+ALTER TABLE users ADD COLUMN coin INT NOT NULL DEFAULT 1000 CHECK(coin >= 0);
 -- +goose StatementEnd
 
 -- +goose Down

@@ -39,7 +39,6 @@ func main() {
 				return
 			}
 		}
-
 	}()
 
 	<-ctx.Done()

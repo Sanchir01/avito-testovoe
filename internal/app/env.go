@@ -16,7 +16,9 @@ type Env struct {
 
 func NewEnv() (*Env, error) {
 	cfg := config.MustLoadConfig()
+
 	logger := setupLogger(cfg.Env)
+	logger.Info("config loaded", slog.Any("config", cfg))
 	ctx := context.Background()
 	primarydb, err := NewDataBases(ctx, cfg.PrimaryDB.User, cfg.PrimaryDB.Host, cfg.PrimaryDB.Dbname, cfg.PrimaryDB.Port, cfg.PrimaryDB.MaxAttempts)
 	if err != nil {

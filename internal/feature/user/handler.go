@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -37,11 +38,19 @@ type AllUserCoinsInfoResponse struct {
 	GetAllUserCoinsInfo *GetAllUserCoinsInfo
 }
 type Handler struct {
-	Service *Service
+	Service HandlerUser
 	Log     *slog.Logger
 }
 
-func NewHandler(s *Service, lg *slog.Logger) *Handler {
+//go:generate go run github.com/vektra/mockery/v2@v2.52.2 --name=HandlerUser
+type HandlerUser interface {
+	Auth(ctx context.Context, email, password string) (string, error)
+	BuyProduct(ctx context.Context, userID, productID uuid.UUID) error
+	SendCoins(ctx context.Context, userID uuid.UUID, senderEmail string, amount int64) error
+	GetAllUserCoinsInfo(ctx context.Context, userID uuid.UUID) (*GetAllUserCoinsInfo, error)
+}
+
+func NewHandler(s HandlerUser, lg *slog.Logger) *Handler {
 	return &Handler{
 		Service: s,
 		Log:     lg,
@@ -108,7 +117,7 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token, err := h.Service.Auth(r.Context(), req.Email, req.Password)
-	if errors.Is(err, errors.New("Неправльный пароль")) {
+	if errors.Is(err, api.ErrWrongPasswordError) {
 		log.Info("password error", sl.Err(err))
 		render.JSON(w, r, api.Error("Введен неправильный пароль"))
 		return

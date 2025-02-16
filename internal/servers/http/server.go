@@ -10,7 +10,7 @@ type Server struct {
 	httpServer *http.Server
 }
 
-func NewHTTPServer(host, port string, timeout, idletimeout time.Duration) *Server {
+func NewHTTPServer(host string, port string, timeout, idletimeout time.Duration) *Server {
 	srv := &http.Server{
 		Addr:           host + ":" + port,
 		MaxHeaderBytes: 1 << 20,

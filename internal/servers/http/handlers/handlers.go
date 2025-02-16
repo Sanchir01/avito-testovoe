@@ -30,6 +30,9 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 
 		})
 		r.Post("/auth", handlers.UserHandler.AuthHandler)
+
+		//usage only test
+		r.Get("/products", handlers.ProductHandler.GetAllProductsHandler)
 	})
 
 	return router

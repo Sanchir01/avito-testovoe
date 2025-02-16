@@ -135,24 +135,6 @@ func (r *Repository) RecordPurchase(ctx context.Context, userID, productID uuid.
 	return nil
 }
 
-func (r *Repository) UpdateUserCoinByEmail(ctx context.Context, email string, coins int64, tx pgx.Tx) error {
-	query, arg, err := sq.
-		Update("users").
-		Set("coin", coins).
-		Where(sq.Eq{"email": email}).
-		PlaceholderFormat(sq.Dollar).
-		ToSql()
-	if err != nil {
-		return err
-	}
-	_, exceErr := tx.Exec(ctx, query, arg...)
-
-	if exceErr != nil {
-		return fmt.Errorf("failed to update user coins: %s", exceErr.Error())
-	}
-	return nil
-}
-
 func (r *Repository) TransactionCoins(ctx context.Context, senderID, receiverID uuid.UUID, amount int64, tx pgx.Tx) error {
 	query, args, err := sq.
 		Insert("transactions_coins").
