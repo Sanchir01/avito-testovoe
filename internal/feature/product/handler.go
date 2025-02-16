@@ -15,6 +15,7 @@ type Handler struct {
 	Log     *slog.Logger
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.52.2 --name=HandlerProducts
 type HandlerProducts interface {
 	GetAllProducts(ctx context.Context) ([]*DataBaseProduct, error)
 	GetProductByID(ctx context.Context, id uuid.UUID) (*DataBaseProduct, error)

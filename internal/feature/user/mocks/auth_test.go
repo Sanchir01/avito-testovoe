@@ -1,11 +1,10 @@
-package test
+package mocks
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/Sanchir01/avito-testovoe/internal/feature/user"
-	"github.com/Sanchir01/avito-testovoe/internal/feature/user/mocks"
 	"github.com/Sanchir01/avito-testovoe/pkg/lib/api"
 	sl "github.com/Sanchir01/avito-testovoe/pkg/lib/log"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +50,7 @@ func TestAuthHandler(t *testing.T) {
 		tc := tc
 		t.Run(tc.email, func(t *testing.T) {
 			t.Parallel()
-			userservice := mocks.NewHandlerUser(t)
+			userservice := NewHandlerUser(t)
 
 			userservice.On("Auth", mock.Anything, tc.email, tc.password).Return(tc.mockToken, tc.mockError).Once()
 			handler := user.NewHandler(userservice, sl.NewDiscardLogger())
