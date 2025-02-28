@@ -1,12 +1,15 @@
 package httphandlers
 
 import (
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 	"net/http"
 
 	"github.com/Sanchir01/avito-testovoe/internal/servers/http/custommiddleware"
 
 	"github.com/Sanchir01/avito-testovoe/internal/app"
 
+	// revive:disable-next-line:blank-imports
+	_ "github.com/Sanchir01/avito-testovoe/docs"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -34,6 +37,8 @@ func StartHTTTPHandlers(handlers *app.Handlers) http.Handler {
 		//usage only test
 		r.Get("/products", handlers.ProductHandler.GetAllProductsHandler)
 	})
-
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
 	return router
 }

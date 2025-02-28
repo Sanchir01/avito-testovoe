@@ -1,0 +1,257 @@
+basePath: /
+definitions:
+  api.Response:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  user.AllUserCoinsInfoResponse:
+    properties:
+      error:
+        type: string
+      getAllUserCoinsInfo:
+        $ref: '#/definitions/user.GetAllUserCoinsInfo'
+      status:
+        type: string
+    type: object
+  user.AuthRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  user.AuthResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+      token:
+        type: string
+    type: object
+  user.CoinsHistory:
+    properties:
+      received:
+        items:
+          $ref: '#/definitions/user.SendInfo'
+        type: array
+      send:
+        items:
+          $ref: '#/definitions/user.SendInfo'
+        type: array
+    type: object
+  user.GetAllUserCoinsInfo:
+    properties:
+      coins:
+        type: integer
+      coinsHistory:
+        $ref: '#/definitions/user.CoinsHistory'
+      inventory:
+        items:
+          $ref: '#/definitions/user.Inventory'
+        type: array
+    type: object
+  user.Inventory:
+    properties:
+      quantity:
+        type: integer
+      type:
+        type: string
+    type: object
+  user.SendCoinsRequest:
+    properties:
+      amount:
+        type: integer
+      toUser:
+        type: string
+    required:
+    - amount
+    - toUser
+    type: object
+  user.SendInfo:
+    properties:
+      amount:
+        type: integer
+      fromUser:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: GitHub
+    url: https://github.com/Sanchir01
+  description: This is a sample server celler
+  termsOfService: http://swagger.io/terms/
+  title: "\U0001F680 Avito testovoe"
+  version: "1.0"
+paths:
+  /api/auth:
+    post:
+      consumes:
+      - application/json
+      description: buy product endpoin
+      parameters:
+      - description: auth body
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      summary: Auth
+      tags:
+      - user
+  /api/buy/{productid}:
+    get:
+      consumes:
+      - application/json
+      description: buy product endpoint
+      parameters:
+      - description: product id
+        in: path
+        name: productid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: BuyProduct
+      tags:
+      - user
+  /api/info:
+    get:
+      consumes:
+      - application/json
+      description: user info coins and product buy count
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.AllUserCoinsInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: GetAllInfoUser
+      tags:
+      - user
+  /api/products:
+    get:
+      consumes:
+      - application/json
+      description: get all products endpoint
+      produces:
+      - application/json
+      responses:
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      summary: GetAllProducts
+      tags:
+      - products
+  /api/sendCoin:
+    post:
+      consumes:
+      - application/json
+      description: send coins
+      parameters:
+      - description: send coins body
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/user.SendCoinsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: SendUserCoins
+      tags:
+      - user
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

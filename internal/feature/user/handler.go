@@ -57,6 +57,17 @@ func NewHandler(s HandlerUser, lg *slog.Logger) *Handler {
 	}
 }
 
+// @Summary BuyProduct
+// @Security ApiKeyAuth
+// @Tags user
+// @Description buy product endpoint
+// @Param productid  path string true "product id"
+// @Accept json
+// @Produce json
+// @Success 200 {string}  string "ok"
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /api/buy/{productid} [get]
 func (h *Handler) BuyProductHandler(w http.ResponseWriter, req *http.Request) {
 	const op = "handlers.buyProduct"
 	log := h.Log.With(
@@ -98,6 +109,16 @@ func (h *Handler) BuyProductHandler(w http.ResponseWriter, req *http.Request) {
 	})
 }
 
+// @Summary Auth
+// @Tags user
+// @Description buy product endpoin
+// @Accept json
+// @Produce json
+// @Param input body AuthRequest true "auth body"
+// @Success 200 {object}  AuthResponse
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /api/auth [post]
 func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handlers.auth"
 	log := h.Log.With(
@@ -135,6 +156,17 @@ func (h *Handler) AuthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary SendUserCoins
+// @Security ApiKeyAuth
+// @Tags user
+// @Description send coins
+// @Accept json
+// @Produce json
+// @Param input body SendCoinsRequest true "send coins body"
+// @Success 200 {string}  string "ok"
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /api/sendCoin [post]
 func (h *Handler) SendUserCoinsHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handlers.sendUserCoins"
 	log := h.Log.With(
@@ -176,6 +208,16 @@ func (h *Handler) SendUserCoinsHandler(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, api.OK())
 }
 
+// @Summary GetAllInfoUser
+// @Security ApiKeyAuth
+// @Tags user
+// @Description user info coins and product buy count
+// @Accept json
+// @Produce json
+// @Success 200 {object}  AllUserCoinsInfoResponse
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /api/info [get]
 func (h *Handler) GetInfoCoinsHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handlers.GetUsersInfoCoins"
 	log := h.Log.With(

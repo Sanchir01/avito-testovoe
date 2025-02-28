@@ -32,6 +32,14 @@ func NewHandler(service HandlerProducts, log *slog.Logger) *Handler {
 	}
 }
 
+// @Summary GetAllProducts
+// @Tags products
+// @Description get all products endpoint
+// @Accept json
+// @Produce json
+// @Failure 400,404 {object}  api.Response
+// @Failure 500 {object}  api.Response
+// @Router /api/products [get]
 func (h *Handler) GetAllProductsHandler(w http.ResponseWriter, r *http.Request) {
 	products, err := h.Service.GetAllProducts(r.Context())
 	if err != nil {

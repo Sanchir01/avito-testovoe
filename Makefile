@@ -23,7 +23,10 @@ migrations-new:
 build:
 	go build -o ./.bin/main ./cmd/main/main.go
 
-run: build	lint
+swag:
+	swag init -g cmd/main/main.go
+
+run: build	lint  swag
 	./.bin/main
 
 docker:

@@ -15,6 +15,20 @@ import (
 	"github.com/fatih/color"
 )
 
+// @title 🚀 Avito testovoe
+// @version         1.0
+// @description This is a sample server celler
+// @termsOfService  http://swagger.io/terms/
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+
+// @contact.name GitHub
+// @contact.url https://github.com/Sanchir01
 func main() {
 	env, err := app.NewEnv()
 	if err != nil {
