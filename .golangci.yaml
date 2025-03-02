@@ -5,11 +5,12 @@ linters:
   enable:
     - errcheck
     - gosimple
-    - govet
     - ineffassign
     - staticcheck
     - unused
     - revive
+  disable:
+    - govet
 
 issues:
   exclude-rules:

@@ -9,9 +9,6 @@ import (
 )
 
 func TestHandlerProducts_GetAllProducts(t *testing.T) {
-	type fields struct {
-		Mock mock.Mock
-	}
 	type args struct {
 		ctx context.Context
 	}
@@ -46,9 +43,6 @@ func TestHandlerProducts_GetAllProducts(t *testing.T) {
 }
 
 func TestHandlerProducts_GetProductByID(t *testing.T) {
-	type fields struct {
-		Mock mock.Mock
-	}
 	type args struct {
 		ctx context.Context
 		id  uuid.UUID
